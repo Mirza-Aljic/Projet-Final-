@@ -1,0 +1,19 @@
+{
+    "name": "nathancampanini/test_website",
+    "description": "test",
+    "autoload": {
+        "psr-4": {
+            "Nathancampanini\\TestWebsite\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Nathan Campanini",
+            "email": "nathancampanini@gmail.com"
+        }
+    ],
+    "require": {
+        "firebase/php-jwt": "^6.11",
+        "vlucas/phpdotenv": "^5.6"
+    }
+}

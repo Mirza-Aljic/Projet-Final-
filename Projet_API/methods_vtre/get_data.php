@@ -24,7 +24,7 @@ try {
 
 try {
     // 2. Table name validation and security
-    $table = 'values_training_robot_exemple';
+    $table = 'values_training_robot_ex  ';
     
     // More strict validation than before
     if (!preg_match('/^[a-zA-Z][a-zA-Z0-9_]*$/', $table)) {

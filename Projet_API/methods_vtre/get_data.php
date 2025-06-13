@@ -26,9 +26,12 @@ try {
     // 2. Table name validation and security
     $table = 'values_training_robot_ex  ';
     
+    // Trim whitespace from both ends
+    $table = trim($table);
+    
     // More strict validation than before
     if (!preg_match('/^[a-zA-Z][a-zA-Z0-9_]*$/', $table)) {
-        throw new InvalidArgumentException("Invalid table name format");
+        throw new InvalidArgumentException("Invalid table name format. Only alphanumeric characters and underscores are allowed.");
     }
 
     // 3. Prepared query with limit for safety

@@ -45,14 +45,9 @@ try {
 
     // Définition des champs attendus
     $fields = [
-        'x' => ['type' => 'int', 'default' => 0],
-        'y' => ['type' => 'int', 'default' => 0],
-        'esc' => ['type' => 'int', 'default' => 0],
-        'up' => ['type' => 'int', 'default' => 0],
-        'down' => ['type' => 'int', 'default' => 0],
-        'right_r' => ['type' => 'int', 'default' => 0],
-        'left_l' => ['type' => 'int', 'default' => 0],
-        'tag' => ['type' => 'float', 'default' => 0.0],
+        'nombre_coups' => ['type' => 'int', 'default' => 0],
+        'duree_simulation' => ['type' => 'time', 'default' => 0],
+        'modele_simulation' => ['type' => 'varchar', 'default' => 0],
     ];
 
     $clean_data = [];
@@ -100,29 +95,24 @@ try {
     try {
         $pdo->beginTransaction();
 
-        $sql = "INSERT INTO values_training_robot_ex (
-                    x, y, esc, up, down, right_r, left_l, tag
+        $sql = "INSERT INTO Simulation (
+                    nombre_coups, duree_simulation, modele_simulation
                 ) VALUES (
-                    :x, :y, :esc, :up, :down, :right_r, :left_l, :tag
+                    :nombre_coups, :duree_simulation, :modele_simulation
                 )";
 
         $stmt = $pdo->prepare($sql);
 
-        $stmt->bindValue(':x', $clean_data['x'], PDO::PARAM_INT);
-        $stmt->bindValue(':y', $clean_data['y'], PDO::PARAM_INT);
-        $stmt->bindValue(':esc', $clean_data['esc'], PDO::PARAM_INT);
-        $stmt->bindValue(':up', $clean_data['up'], PDO::PARAM_INT);
-        $stmt->bindValue(':down', $clean_data['down'], PDO::PARAM_INT);
-        $stmt->bindValue(':right_r', $clean_data['right_r'], PDO::PARAM_INT);
-        $stmt->bindValue(':left_l', $clean_data['left_l'], PDO::PARAM_INT);
-        $stmt->bindValue(':tag', $clean_data['tag'], PDO::PARAM_STR); // float traité comme string
+        $stmt->bindValue(':nombre_coups', $clean_data['nombre_coups'], PDO::PARAM_INT);
+        $stmt->bindValue(':duree_simulation', $clean_data['duree_simulation'], PDO::PARAM_INT);
+        $stmt->bindValue(':modele_simulation', $clean_data['modele_simulation'], PDO::PARAM_INT);
 
         $stmt->execute();
         $pdo->commit();
 
         echo json_encode([
             "status" => "success",
-            "message" => "Données insérées dans values_training_robot_ex",
+            "message" => "Données insérées dans Simulation",
             "data" => $clean_data
         ]);
     } catch (PDOException $e) {

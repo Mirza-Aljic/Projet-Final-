@@ -25,9 +25,7 @@ try {
 
     // Vérification Content-Type
     $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
-    $isAppJSON = stripos($contentType, 'application/json') !== false;
-
-    if (!$isAppJSON) {
+    if (stripos($contentType, 'application/json') === false) {
         http_response_code(415);
         echo json_encode(["status" => "error", "message" => "Content-Type non supporté. Utilisez application/json."]);
         exit;
@@ -37,17 +35,17 @@ try {
     $json_data = file_get_contents("php://input");
     $data = json_decode($json_data, true);
 
-    if (empty($data)) {
+    if (json_last_error() !== JSON_ERROR_NONE || $data === null) {
         http_response_code(400);
-        echo json_encode(["status" => "error", "message" => "Aucune donnée reçue"]);
+        echo json_encode(["status" => "error", "message" => "Données JSON invalides"]);
         exit;
     }
 
     // Définition des champs attendus
     $fields = [
         'nombre_coups' => ['type' => 'int', 'default' => 0],
-        'duree_simulation' => ['type' => 'time', 'default' => 0],
-        'modele_simulation' => ['type' => 'varchar', 'default' => 0],
+        'duree_simulation' => ['type' => 'string', 'default' => "00:00:00"],
+        'modele_simulation' => ['type' => 'string', 'default' => ""],
     ];
 
     $clean_data = [];
@@ -59,18 +57,31 @@ try {
             continue;
         }
 
+        $value = $data[$field];
+        
         switch ($config['type']) {
             case 'int':
-                $value = filter_var($data[$field], FILTER_VALIDATE_INT);
-                if ($value === false) {
+                if (!is_numeric($value) || (int)$value != $value) {
                     $errors[] = "Le champ '$field' doit être un entier.";
                     $value = $config['default'];
+                } else {
+                    $value = (int)$value;
                 }
                 break;
             case 'float':
-                $value = filter_var($data[$field], FILTER_VALIDATE_FLOAT);
-                if ($value === false) {
+                if (!is_numeric($value)) {
                     $errors[] = "Le champ '$field' doit être un nombre décimal.";
+                    $value = $config['default'];
+                } else {
+                    $value = (float)$value;
+                }
+                break;
+            case 'string':
+                $value = trim((string)$value);
+                break;
+            case 'time':
+                if (!preg_match('/^\d{2}:\d{2}:\d{2}$/', $value)) {
+                    $errors[] = "Le champ '$field' doit être au format HH:MM:SS.";
                     $value = $config['default'];
                 }
                 break;
@@ -104,15 +115,16 @@ try {
         $stmt = $pdo->prepare($sql);
 
         $stmt->bindValue(':nombre_coups', $clean_data['nombre_coups'], PDO::PARAM_INT);
-        $stmt->bindValue(':duree_simulation', $clean_data['duree_simulation'], PDO::PARAM_INT);
-        $stmt->bindValue(':modele_simulation', $clean_data['modele_simulation'], PDO::PARAM_INT);
+        $stmt->bindValue(':duree_simulation', $clean_data['duree_simulation'], PDO::PARAM_STR);
+        $stmt->bindValue(':modele_simulation', $clean_data['modele_simulation'], PDO::PARAM_STR);
 
         $stmt->execute();
         $pdo->commit();
 
+        http_response_code(201);
         echo json_encode([
             "status" => "success",
-            "message" => "Données insérées dans Simulation",
+            "message" => "Données insérées avec succès",
             "data" => $clean_data
         ]);
     } catch (PDOException $e) {
@@ -121,8 +133,8 @@ try {
         error_log("Erreur DB: " . $e->getMessage());
         echo json_encode([
             "status" => "error",
-            "message" => "Erreur lors de l'insertion",
-            "details" => $e->getMessage()
+            "message" => "Erreur lors de l'insertion en base de données",
+            "details" => "Une erreur interne est survenue"
         ]);
     }
 } catch (Exception $e) {
@@ -131,7 +143,7 @@ try {
     echo json_encode([
         "status" => "error",
         "message" => "Erreur système",
-        "details" => $e->getMessage()
+        "details" => "Une erreur interne est survenue"
     ]);
 }
 ?>
